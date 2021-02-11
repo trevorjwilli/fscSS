@@ -1,0 +1,23 @@
+Package: fscSS
+Type: Package
+Title: Calculates Summary Statistics from fsc26 simulations for ABC 
+Version: 0.0.0.9000
+Authors@R: 
+    person(given = "Trevor",
+           family = "Williams",
+           role = c("aut", "cre"),
+           email = "trevorjwilli@gmail.com")
+Description: This package calculates several population genetics 
+     summary statistics on DNA sequence .arp files from fsc26 simulations 
+     to be used in downstream ABC analyses.
+License: GPL-2
+Encoding: UTF-8
+LazyData: true
+Imports:
+     ape,
+     pegas,
+     stats,
+     utils
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.1.1
+
