@@ -243,9 +243,9 @@ sumstats <- function(x) {
 
 
 sumstats_pops <- function(x) {
+  npops <- length(x)
   y <- lapply(x, fscSS::sumstats) # Calculate sumstats within populations
   y <- unlist(y) # make a vector of sumstats from populations
-  #print(y)
   ind <- grep("Pi", names(y)) # Find which vector elements correspond to pi
   mean.pi <- mean(y[ind]) # Calculate the mean pi across populations
   sd.pi <- stats::sd(y[ind]) # Calculate the standard deviation of pi across populations
@@ -260,23 +260,19 @@ sumstats_pops <- function(x) {
   var.D <- stats::var(y[ind.D])
   all.samps <- do.call(rbind, x) # Make a new matrix pooling the populations together
   n <- nrow(all.samps)
-  haps <- pegas::haplotype(all.samps) # Find haplotypes from pooled sample
-  hap.freqs <- lengths(attr(haps, "index"))/n
-  num.haps <- length(attr(haps, "index")) # Calculate the number of haplotypes from pooled sample
-  h <- (n*(1-sum(hap.freqs^2)))/(n-1)
-  sites <- apply(all.samps, 2, unique) # Find which sites have multiple nucleotides present in pooled sample
-  s <- length(which(sapply(sites, length) != 1)) # Calculate the total number of segregating sites in pooled sample
-  if(s == 0) { # Add in if statements to fix error that if all sites are segregating then the output was 0
-    if(num.haps == 1) {
-      s <- 0
-    } else {
-      s <- length(x[[1]][1,])
-    }
-  }
+  all.stats <- fscSS::sumstats(all.samps)
   shared.haps <- fscSS::sharedhaps(x)
-  tot <- c(num.haps, shared.haps[[1]], shared.haps[[2]], s, h, mean.H, sd.H, mean.pi, sd.pi, mean.theta, sd.theta, mean.D, var.D) # Output pooled summary statistics
-  names(tot) <- c("Tot.K","Num.shared", "Per.shared", "Tot.S", "Tot.H", "Mean.H", "sd.H", "Mean.Pi", "sd.Pi", "Mean.theta", "sd.theta", "Mean.D", "var.D")
+  tot <- c(all.stats["K"], shared.haps[[1]], shared.haps[[2]], all.stats["S"], all.stats["H"], all.stats["Pi"], all.stats["ThetaW"], all.stats["TajimaD"], mean.H, sd.H, mean.pi, sd.pi, mean.theta, sd.theta, mean.D, var.D) # Output pooled summary statistics
+  names(tot) <- c("Tot.K","Num.shared", "Per.shared", "Tot.S", "Tot.H", "Tot.pi", "Tot.theta", "Tot.D", "Mean.H", "sd.H", "Mean.Pi", "sd.Pi", "Mean.theta", "sd.theta", "Mean.D", "var.D")
+  print(y)
+  print(tot)
   out <- append(y, tot)
+  popshead <- vector()
+  for(i in 1:npops) {
+    popshead <- append(popshead, paste0(c("K", "H", "S", "Pi", "ThetaW", "TajimaD"), i))
+  }
+  print(popshead)
+  names(out) <- c(popshead, "Tot.K","Num.shared", "Per.shared", "Tot.S", "Tot.H", "Tot.pi", "Tot.theta", "Tot.D", "Mean.H", "sd.H", "Mean.Pi", "sd.Pi", "Mean.theta", "sd.theta", "Mean.D", "var.D")
+
   return(out)
 }
-
