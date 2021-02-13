@@ -263,15 +263,11 @@ sumstats_pops <- function(x) {
   all.stats <- fscSS::sumstats(all.samps)
   shared.haps <- fscSS::sharedhaps(x)
   tot <- c(all.stats["K"], shared.haps[[1]], shared.haps[[2]], all.stats["S"], all.stats["H"], all.stats["Pi"], all.stats["ThetaW"], all.stats["TajimaD"], mean.H, sd.H, mean.pi, sd.pi, mean.theta, sd.theta, mean.D, var.D) # Output pooled summary statistics
-  names(tot) <- c("Tot.K","Num.shared", "Per.shared", "Tot.S", "Tot.H", "Tot.pi", "Tot.theta", "Tot.D", "Mean.H", "sd.H", "Mean.Pi", "sd.Pi", "Mean.theta", "sd.theta", "Mean.D", "var.D")
-  print(y)
-  print(tot)
   out <- append(y, tot)
   popshead <- vector()
   for(i in 1:npops) {
     popshead <- append(popshead, paste0(c("K", "H", "S", "Pi", "ThetaW", "TajimaD"), i))
   }
-  print(popshead)
   names(out) <- c(popshead, "Tot.K","Num.shared", "Per.shared", "Tot.S", "Tot.H", "Tot.pi", "Tot.theta", "Tot.D", "Mean.H", "sd.H", "Mean.Pi", "sd.Pi", "Mean.theta", "sd.theta", "Mean.D", "var.D")
 
   return(out)
