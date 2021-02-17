@@ -246,6 +246,12 @@ sumstats_pops <- function(x) {
   npops <- length(x)
   y <- lapply(x, fscSS::sumstats) # Calculate sumstats within populations
   y <- unlist(y) # make a vector of sumstats from populations
+  ind.K <- grep("K", names(y)) # Find which vector elements correspond to pi
+  mean.K <- mean(y[ind.K]) # Calculate the mean pi across populations
+  sd.K <- stats::sd(y[ind.K]) # Calculate the standard deviation of pi across populations
+  ind.S <- grep("S", names(y)) # Find which vector elements correspond to pi
+  mean.S <- mean(y[ind.S]) # Calculate the mean pi across populations
+  sd.S <- stats::sd(y[ind.S]) # Calculate the standard deviation of pi across populations
   ind <- grep("Pi", names(y)) # Find which vector elements correspond to pi
   mean.pi <- mean(y[ind]) # Calculate the mean pi across populations
   sd.pi <- stats::sd(y[ind]) # Calculate the standard deviation of pi across populations
@@ -262,13 +268,15 @@ sumstats_pops <- function(x) {
   n <- nrow(all.samps)
   all.stats <- fscSS::sumstats(all.samps)
   shared.haps <- fscSS::sharedhaps(x)
-  tot <- c(all.stats["K"], shared.haps[[1]], shared.haps[[2]], all.stats["S"], all.stats["H"], all.stats["Pi"], all.stats["ThetaW"], all.stats["TajimaD"], mean.H, sd.H, mean.pi, sd.pi, mean.theta, sd.theta, mean.D, var.D) # Output pooled summary statistics
+  tot <- c(all.stats["K"], shared.haps[[1]], shared.haps[[2]], all.stats["S"], all.stats["H"], all.stats["Pi"], all.stats["ThetaW"], all.stats["TajimaD"],mean.K, sd.K, mean.S, sd.S, mean.H, sd.H, mean.pi, sd.pi, mean.theta, sd.theta, mean.D, var.D) # Output pooled summary statistics
   out <- append(y, tot)
   popshead <- vector()
   for(i in 1:npops) {
     popshead <- append(popshead, paste0(c("K", "H", "S", "Pi", "ThetaW", "TajimaD"), i))
   }
-  names(out) <- c(popshead, "Tot.K","Num.shared", "Per.shared", "Tot.S", "Tot.H", "Tot.pi", "Tot.theta", "Tot.D", "Mean.H", "sd.H", "Mean.Pi", "sd.Pi", "Mean.theta", "sd.theta", "Mean.D", "var.D")
+  names(out) <- c(popshead, "Tot.K","Num.shared", "Per.shared", "Tot.S", "Tot.H", "Tot.pi", "Tot.theta", "Tot.D","Mean.K", "sd.K", "Mean.S", "sd.S", "Mean.H", "sd.H", "Mean.Pi", "sd.Pi", "Mean.theta", "sd.theta", "Mean.D", "var.D")
 
   return(out)
 }
+
+
