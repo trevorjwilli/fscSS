@@ -65,6 +65,32 @@ read.arp <- function(file) {
   }
 }
 
+#' Read in a .param file
+#'
+#' @param path PATH to .param file
+#'
+#' @export
+
+read.param <- function(path) {
+  input <- readLines(path)
+  for(i in 1:length(input)) {
+    if(i == 1) {
+      header <- unlist(strsplit(input[i], "\t"))
+      print(header)
+      rmv <- grep("Max", header)
+      header <- header[-rmv]
+      out <- matrix(nrow = length(input) - 1, ncol = length(header))
+    } else {
+      inline <- as.numeric(unlist(strsplit(input[i], "\t")))
+      out[i - 1, ] <- inline
+    }
+  }
+  colnames(out) <- header
+  out <- as.data.frame(out)
+  out
+}
+
+
 
 #' Concatenate sequences into a vector from matrix
 #'
