@@ -305,4 +305,39 @@ sumstats_pops <- function(x) {
   return(out)
 }
 
+#' Function to calculate simple transition/transversion ratio and transition rate
+#'
+#' @param x Object of class DNAbin
+#'
+#' @export
+
+count_tstv <- function(x) {
+  ts <- 0
+  tv <- 0
+
+  for(i in 1:ncol(x)) {
+    alleles <- unique(as.vector(as.character(x[,i])))
+    if(length(alleles) == 1){
+      next
+    } else if(length(alleles) == 2) {
+      if("a" %in% alleles & "g" %in% alleles) {
+        ts <- ts + 1
+      } else if("c" %in% alleles & "t" %in% alleles) {
+        ts <- ts + 1
+      } else {
+        tv <- tv + 1
+      }
+    } else if(length(alleles) > 2) {
+      warning(paste0("Multiple hits at position ", i, ", position skipped"))
+      next
+    }
+  }
+  cat(paste("Transitions:", ts, "\n"))
+  cat(paste("Transversions:", tv, "\n"))
+  cat(paste("ts/tv:", ts/tv, "\n"))
+  cat(paste("ts rate:", ts/sum(ts, tv), "\n"))
+}
+
+
+
 
