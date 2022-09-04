@@ -234,7 +234,7 @@ calc_dxy <- function(l) {
     return(length(n))
   }
   nPOP <- length(l)
-  combs <- combn(nPOP, 2)
+  combs <- utils::combn(nPOP, 2)
   out <- c(length = ncol(combs))
   nms <- c()
   for(i in 1:ncol(combs)) {
@@ -402,7 +402,7 @@ sumstats_pops <- function(x) {
     popshead <- append(popshead, paste0(c("K", "H", "VarH", "S", "Pi", "VarPi", "ThetaW", "TajimaD"), i))
   }
   names(y) <- popshead
-  out <- c(y, dxy, Fst)
+  out <- c(y, dxy, Fst = Fst)
 
   return(out)
 }
