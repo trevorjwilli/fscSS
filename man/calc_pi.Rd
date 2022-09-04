@@ -2,7 +2,7 @@
 % Please edit documentation in R/Functions.R
 \name{calc_pi}
 \alias{calc_pi}
-\title{Calculate the average number of nucleotide differences (Tajima 1983 eq. A3)}
+\title{Calculate the average number of nucleotide differences (Tajima 1983 eq. A3, Nei 1987 eq. 10.6)}
 \usage{
 calc_pi(x)
 }
@@ -10,5 +10,5 @@ calc_pi(x)
 \item{x}{An object of class DNAbin or a matrix where rows are sequences and columns are nucleotide positions (assumed to be already aligned)}
 }
 \description{
-Calculate the average number of nucleotide differences (Tajima 1983 eq. A3)
+Calculate the average number of nucleotide differences (Tajima 1983 eq. A3, Nei 1987 eq. 10.6)
 }

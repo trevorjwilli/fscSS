@@ -127,7 +127,7 @@ sharedhaps <- function(x) {
 }
 
 
-#' Calculate the average number of nucleotide differences (Tajima 1983 eq. A3)
+#' Calculate the average number of nucleotide differences (Tajima 1983 eq. A3, Nei 1987 eq. 10.6)
 #'
 #' @param x An object of class DNAbin or a matrix where rows are sequences and columns are nucleotide positions (assumed to be already aligned)
 #'
@@ -151,26 +151,120 @@ calc_pi <- function(x) {
   return(ave.pi)
 }
 
-
-#' Function to calculate the average number of nucleotide differences between two separate populations
+#' Function to calculate the sampling variance of pi (Nei 1987, eq. 10.7; from source code of DNAsp)
 #'
-#' @param x,y Objects of class DNAbin or matrices where rows are sequences and columns are nucleotide positions from two different populations
-#'
+#' @param x An object of class DNAbin or a matrix where rows are sequences and columns are nucleotide positions (assumed to be already aligned)
+#' @param sites Optional integer specifying the total number of nucleotide sites in the alignment if fastsimcoal2 does not output all sites
 #' @export
 
-calc_pi_pops <- function(x, y) {
+calc_var_pi <- function(x, sites = NULL) {
 
   differ <- function(x, y) {
     n <- which(x != y)
     return(length(n))
   }
 
-  l.1 <- split(x, row(x))
-  l.2 <- split(y, row(y))
-  d <- sapply(l.1, function(m) sapply(l.2, function(n) differ(m, n)))
-  ave.pi <- sum(d)/length(d)
-  return(ave.pi)
+  n <- nrow(x)
+  if(is.null(sites)) {
+    nsite <- ncol(x)
+  } else {
+    nsite <- sites
+  }
+
+  kba <- 0
+  for(i in 1:(n-1)) {
+    for(j in (i+1):n) {
+      count <- differ(x[i,], x[j,])
+      kba <- kba + count
+    }
+  }
+
+  kba <- kba / (n * (n - 1)/2)
+  var1 = 1
+  var1 <- (kba * kba * (n-1) * (n-1)) / (var1 * 4 * nsite * nsite * n * n)
+
+  var2 = 0
+  for(i in 1:n) {
+    for(j in 1:n) {
+      if(i != j) {
+        for(k in j:n) {
+          count_ij <- differ(x[i,], x[j,])
+          count_ik <- differ(x[i,], x[k,])
+          count <- count_ij*count_ik
+          if(j != k) {
+            count <- count * 2
+          }
+          var2 <- var2 + count
+        }
+      }
+    }
+  }
+
+  var2 <- var2 * (1 / (nsite * nsite))
+  var2 <- var2 * (1 / (n * n * n))
+
+  var2 <- var2 * (n - 2)
+
+  var3 <- 0
+  for(i in 1:(n-1)) {
+    for(j in (i+1):n) {
+      count <- differ(x[i,], x[j,])
+      count <- count * count
+      var3 <- var3 + count
+    }
+  }
+
+  var3 <- var3 / (nsite * nsite)
+  var3 <- var3 * (1 / (n * n))
+
+  var_pi = (4 / ((n) * (n - 1))) * (((6 - (4 * n)) * var1) + var2 + var3)
+  return(var_pi)
 }
+
+
+#' Function to calculate the average number of nucleotide differences (dxy) between two separate populations (wakeley)
+#'
+#' @param l List with objects of class DNAbin or matrices where rows are sequences and columns are nucleotide positions from two different populations
+#'
+#' @export
+
+calc_dxy <- function(l) {
+  differ <- function(x, y) {
+    n <- which(x != y)
+    return(length(n))
+  }
+  nPOP <- length(l)
+  combs <- combn(nPOP, 2)
+  out <- c(length = ncol(combs))
+  nms <- c()
+  for(i in 1:ncol(combs)) {
+    pop1 <- l[[combs[1,i]]]
+    pop2 <- l[[combs[2,i]]]
+
+    pop1 <- split(pop1, row(pop1))
+    pop2 <- split(pop2, row(pop2))
+
+    d <- sapply(pop1, function(m) sapply(pop2, function(n) differ(m, n)))
+    out[i] <- sum(d)/length(d)
+    nms[i] <- paste0("d", combs[1,i], combs[2,i])
+  }
+  names(out) <- nms
+  return(out)
+}
+
+#calc_pi_pops <- function(x, y) {
+#
+#  differ <- function(x, y) {
+#    n <- which(x != y)
+#    return(length(n))
+#  }
+#
+#  l.1 <- split(x, row(x))
+#  l.2 <- split(y, row(y))
+#  d <- sapply(l.1, function(m) sapply(l.2, function(n) differ(m, n)))
+#  ave.pi <- sum(d)/length(d)
+#  return(ave.pi)
+#}
 
 #' Function to calculate the Watterson estimator for theta
 #'
@@ -237,7 +331,8 @@ sumstats <- function(x) {
     num.haps <- length(attr(haps, "index")) # Find the total number of haplotypes
     hap.freqs <- lengths(attr(haps, "index"))/n # Make a vector containing the frequencies of each haplotype
   }
-  h <- (n*(1-sum(hap.freqs^2)))/(n-1) # Calculate haplotype diversity (Nei 1983, eq. 8.4)
+  h <- (n*(1-sum(hap.freqs^2)))/(n-1) # Calculate haplotype diversity (Nei 1987, eq. 8.4)
+  var_h <- (2/(n*(n-1)))*(2*(n-2)*(sum(hap.freqs^3)-sum(hap.freqs^2)^2)+sum(hap.freqs^2)-(sum(hap.freqs^2)^2)) # Calculate variance of haplotype diversity (Nei 1987, eq. 8.12)
   sites <- apply(x, 2, unique) # Find which sites have multiple nucleotides present
   if(is.matrix(sites)) { # Fixes an error where the output of sites is a matrix if all segregating sites have the same number of mutations
     s <- ncol(sites)
@@ -248,13 +343,15 @@ sumstats <- function(x) {
   }
   if(length(x[1,]) == 0) { # Add if statement to check if sequences are different so Pi can be calculated
     pi <- 0
+    var_pi <- 0
   } else {
     pi <- fscSS::calc_pi(x) # Calculate the Average number of nucleotide differences (π)
+    var_pi <- fscSS::calc_var_pi(x)
   }
   theta <- fscSS::theta_watt(x)
   D <- fscSS::tajimaD(x)
-  out <- c(num.haps, h, s, pi, theta, D)
-  names(out) <- c("K", "H", "S", "Pi", "ThetaW", "TajimaD")
+  out <- c(num.haps, h, var_h, s, pi, var_pi, theta, D)
+  names(out) <- c("K", "H", "VarH", "S", "Pi", "VarPi", "ThetaW", "TajimaD")
   return(out)
 }
 
@@ -272,35 +369,40 @@ sumstats_pops <- function(x) {
   npops <- length(x)
   y <- lapply(x, fscSS::sumstats) # Calculate sumstats within populations
   y <- unlist(y) # make a vector of sumstats from populations
-  ind.K <- grep("K", names(y)) # Find which vector elements correspond to pi
-  mean.K <- mean(y[ind.K]) # Calculate the mean pi across populations
-  sd.K <- stats::sd(y[ind.K]) # Calculate the standard deviation of pi across populations
-  ind.S <- grep("S", names(y)) # Find which vector elements correspond to pi
-  mean.S <- mean(y[ind.S]) # Calculate the mean pi across populations
-  sd.S <- stats::sd(y[ind.S]) # Calculate the standard deviation of pi across populations
-  ind <- grep("Pi", names(y)) # Find which vector elements correspond to pi
-  mean.pi <- mean(y[ind]) # Calculate the mean pi across populations
-  sd.pi <- stats::sd(y[ind]) # Calculate the standard deviation of pi across populations
-  ind.h <- grep("H", names(y))
-  mean.H <- mean(y[ind.h])
-  sd.H <- stats::sd(y[ind.h])
-  ind.theta <- grep("ThetaW", names(y))
-  mean.theta <- mean(y[ind.theta])
-  sd.theta <- stats::sd(y[ind.theta])
-  ind.D <- grep("TajimaD", names(y))
-  mean.D <- mean(y[ind.D])
-  var.D <- stats::var(y[ind.D])
-  all.samps <- do.call(rbind, x) # Make a new matrix pooling the populations together
-  n <- nrow(all.samps)
-  all.stats <- fscSS::sumstats(all.samps)
-  shared.haps <- fscSS::sharedhaps(x)
-  tot <- c(all.stats["K"], shared.haps[[1]], shared.haps[[2]], all.stats["S"], all.stats["H"], all.stats["Pi"], all.stats["ThetaW"], all.stats["TajimaD"],mean.K, sd.K, mean.S, sd.S, mean.H, sd.H, mean.pi, sd.pi, mean.theta, sd.theta, mean.D, var.D) # Output pooled summary statistics
-  out <- append(y, tot)
+  #ind.K <- grep("K", names(y)) # Find which vector elements correspond to pi
+  #mean.K <- mean(y[ind.K]) # Calculate the mean pi across populations
+  #sd.K <- stats::sd(y[ind.K]) # Calculate the standard deviation of pi across populations
+  #ind.S <- grep("S", names(y)) # Find which vector elements correspond to pi
+  #mean.S <- mean(y[ind.S]) # Calculate the mean pi across populations
+  #sd.S <- stats::sd(y[ind.S]) # Calculate the standard deviation of pi across populations
+  #ind <- grep("Pi", names(y)) # Find which vector elements correspond to pi
+  #mean.pi <- mean(y[ind]) # Calculate the mean pi across populations
+  #sd.pi <- stats::sd(y[ind]) # Calculate the standard deviation of pi across populations
+  #ind.h <- grep("H", names(y))
+  #mean.H <- mean(y[ind.h])
+  #sd.H <- stats::sd(y[ind.h])
+  #ind.theta <- grep("ThetaW", names(y))
+  #mean.theta <- mean(y[ind.theta])
+  #sd.theta <- stats::sd(y[ind.theta])
+  #ind.D <- grep("TajimaD", names(y))
+  #mean.D <- mean(y[ind.D])
+  #var.D <- stats::var(y[ind.D])
+  #all.samps <- do.call(rbind, x) # Make a new matrix pooling the populations together
+  #n <- nrow(all.samps)
+  #all.stats <- fscSS::sumstats(all.samps)
+  #shared.haps <- fscSS::sharedhaps(x)
+  #tot <- c(all.stats["K"], shared.haps[[1]], shared.haps[[2]], all.stats["S"], all.stats["H"], all.stats["Pi"], all.stats["ThetaW"], all.stats["TajimaD"],mean.K, sd.K, mean.S, sd.S, mean.H, sd.H, mean.pi, sd.pi, mean.theta, sd.theta, mean.D, var.D) # Output pooled summary statistics
+  #out <- append(y, tot)
+  dxy <- calc_dxy(x)
+  mean_pis <- mean(y[grep("Pi", names(y))])
+  Fst <- 1 - (mean_pis/mean(dxy)) # Hudson, Slatkin, Maddison 1992, eq. 3
+
   popshead <- vector()
   for(i in 1:npops) {
-    popshead <- append(popshead, paste0(c("K", "H", "S", "Pi", "ThetaW", "TajimaD"), i))
+    popshead <- append(popshead, paste0(c("K", "H", "VarH", "S", "Pi", "VarPi", "ThetaW", "TajimaD"), i))
   }
-  names(out) <- c(popshead, "Tot.K","Num.shared", "Per.shared", "Tot.S", "Tot.H", "Tot.pi", "Tot.theta", "Tot.D","Mean.K", "sd.K", "Mean.S", "sd.S", "Mean.H", "sd.H", "Mean.Pi", "sd.Pi", "Mean.theta", "sd.theta", "Mean.D", "var.D")
+  names(y) <- popshead
+  out <- c(y, dxy, Fst)
 
   return(out)
 }
