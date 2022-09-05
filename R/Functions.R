@@ -351,7 +351,7 @@ sumstats <- function(x) {
   theta <- fscSS::theta_watt(x)
   D <- fscSS::tajimaD(x)
   out <- c(num.haps, h, var_h, s, pi, var_pi, theta, D)
-  names(out) <- c("K", "H", "VarH", "S", "Pi", "VarPi", "ThetaW", "TajimaD")
+  names(out) <- c("K", "H", "VarH", "S", "Pi", "Varpi", "ThetaW", "TajimaD")
   return(out)
 }
 
@@ -399,7 +399,7 @@ sumstats_pops <- function(x) {
 
   popshead <- vector()
   for(i in 1:npops) {
-    popshead <- append(popshead, paste0(c("K", "H", "VarH", "S", "Pi", "VarPi", "ThetaW", "TajimaD"), i))
+    popshead <- append(popshead, paste0(c("K", "H", "VarH", "S", "Pi", "Varpi", "ThetaW", "TajimaD"), i))
   }
   names(y) <- popshead
   out <- c(y, dxy, Fst = Fst)
