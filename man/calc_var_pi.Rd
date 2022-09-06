@@ -4,12 +4,12 @@
 \alias{calc_var_pi}
 \title{Function to calculate the sampling variance of pi (Nei 1987, eq. 10.7; from source code of DNAsp)}
 \usage{
-calc_var_pi(x, sites = NULL)
+calc_var_pi(x, nsites = NULL)
 }
 \arguments{
 \item{x}{An object of class DNAbin or a matrix where rows are sequences and columns are nucleotide positions (assumed to be already aligned)}
 
-\item{sites}{Optional integer specifying the total number of nucleotide sites in the alignment if fastsimcoal2 does not output all sites}
+\item{nsites}{Optional integer specifying the total number of nucleotide sites in the alignment if fastsimcoal2 does not output all sites}
 }
 \description{
 Function to calculate the sampling variance of pi (Nei 1987, eq. 10.7; from source code of DNAsp)

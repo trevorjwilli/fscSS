@@ -154,10 +154,10 @@ calc_pi <- function(x) {
 #' Function to calculate the sampling variance of pi (Nei 1987, eq. 10.7; from source code of DNAsp)
 #'
 #' @param x An object of class DNAbin or a matrix where rows are sequences and columns are nucleotide positions (assumed to be already aligned)
-#' @param sites Optional integer specifying the total number of nucleotide sites in the alignment if fastsimcoal2 does not output all sites
+#' @param nsites Optional integer specifying the total number of nucleotide sites in the alignment if fastsimcoal2 does not output all sites
 #' @export
 
-calc_var_pi <- function(x, sites = NULL) {
+calc_var_pi <- function(x, nsites = NULL) {
 
   differ <- function(x, y) {
     n <- which(x != y)
@@ -165,10 +165,10 @@ calc_var_pi <- function(x, sites = NULL) {
   }
 
   n <- nrow(x)
-  if(is.null(sites)) {
+  if(is.null(nsites)) {
     nsite <- ncol(x)
   } else {
-    nsite <- sites
+    nsite <- nsites
   }
 
   kba <- 0
@@ -318,10 +318,11 @@ tajimaD <- function(x) {
 #'
 #' @param x Object of class DNAbin or a matrix of multiple sequence alignment where
 #' rows are sequences and columns are nucleotide positions
+#' @param nsites Optional integer specifying the total number of nucleotide sites in the loci examined
 #'
 #' @export
 
-sumstats <- function(x) {
+sumstats <- function(x, nsites = NULL) {
   n <- nrow(x)
   if(length(x) == 0) {
     num.haps <- 1
@@ -346,7 +347,11 @@ sumstats <- function(x) {
     var_pi <- 0
   } else {
     pi <- fscSS::calc_pi(x) # Calculate the Average number of nucleotide differences (π)
-    var_pi <- fscSS::calc_var_pi(x)
+    if(is.null(nsites)) {
+      var_pi <- fscSS::calc_var_pi(x)
+    } else {
+      var_pi <- fscSS::calc_var_pi(x, nsites = nsites)
+    }
   }
   theta <- fscSS::theta_watt(x)
   D <- fscSS::tajimaD(x)
@@ -361,13 +366,18 @@ sumstats <- function(x) {
 #' @param x List of objects of class DNAbin or matrices of multiple sequence alignment where
 #' rows are sequences and columns are nucleotide positions. Each object in list is a separate
 #' population.
+#' @param nsites Optional integer indicating the total number of nucleotide sites in the analyzed locus
 #'
 #' @export
 
 
-sumstats_pops <- function(x) {
+sumstats_pops <- function(x, nsites = NULL) {
   npops <- length(x)
-  y <- lapply(x, fscSS::sumstats) # Calculate sumstats within populations
+  if(is.null(nsites)) {
+    y <- lapply(x, fscSS::sumstats) # Calculate sumstats within populations
+  } else {
+    y <- lapply(x, fscSS::sumstats, nsites = nsites)
+  }
   y <- unlist(y) # make a vector of sumstats from populations
   #ind.K <- grep("K", names(y)) # Find which vector elements correspond to pi
   #mean.K <- mean(y[ind.K]) # Calculate the mean pi across populations

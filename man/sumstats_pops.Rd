@@ -4,12 +4,14 @@
 \alias{sumstats_pops}
 \title{Function to calculate sumstats on samples with multiple populations}
 \usage{
-sumstats_pops(x)
+sumstats_pops(x, nsites = NULL)
 }
 \arguments{
 \item{x}{List of objects of class DNAbin or matrices of multiple sequence alignment where
 rows are sequences and columns are nucleotide positions. Each object in list is a separate
 population.}
+
+\item{nsites}{Optional integer indicating the total number of nucleotide sites in the}
 }
 \description{
 Function to calculate sumstats on samples with multiple populations

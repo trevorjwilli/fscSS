@@ -4,11 +4,13 @@
 \alias{sumstats}
 \title{Function to calculate the number of haplotypes, number of segregating sites, haplotype diversity, and pi of a matrix of sequences}
 \usage{
-sumstats(x)
+sumstats(x, nsites = NULL)
 }
 \arguments{
 \item{x}{Object of class DNAbin or a matrix of multiple sequence alignment where
 rows are sequences and columns are nucleotide positions}
+
+\item{nsites}{Optional integer specifying the total number of nucleotide sites in the loci examined}
 }
 \description{
 Function to calculate the number of haplotypes, number of segregating sites, haplotype diversity, and pi of a matrix of sequences
