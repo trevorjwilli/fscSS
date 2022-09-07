@@ -228,30 +228,39 @@ calc_var_pi <- function(x, nsites = NULL) {
 #'
 #' @export
 
-calc_dxy <- function(l) {
+calc_dxy <- function (l) {
   differ <- function(x, y) {
     n <- which(x != y)
     return(length(n))
   }
+
   nPOP <- length(l)
   combs <- utils::combn(nPOP, 2)
-  out <- c(length = ncol(combs))
+  seqcheck <- sum(unlist(lapply(l, length)))
   nms <- c()
-  for(i in 1:ncol(combs)) {
-    pop1 <- l[[combs[1,i]]]
-    pop2 <- l[[combs[2,i]]]
-
-    pop1 <- split(pop1, row(pop1))
-    pop2 <- split(pop2, row(pop2))
-
-    d <- sapply(pop1, function(m) sapply(pop2, function(n) differ(m, n)))
-    out[i] <- sum(d)/length(d)
-    nms[i] <- paste0("d", combs[1,i], combs[2,i])
+  if(seqcheck == 0) {
+    for(i in 1:ncol(combs)) {
+      nms[i] <- paste0("d", combs[1, i], combs[2, i])
+    }
+    out <- rep(0, nPOP)
+    names(out) <- nms
+    return(out)
+  } else {
+    out <- c(length = ncol(combs))
+    nms <- c()
+    for (i in 1:ncol(combs)) {
+      pop1 <- l[[combs[1, i]]]
+      pop2 <- l[[combs[2, i]]]
+      pop1 <- split(pop1, row(pop1))
+      pop2 <- split(pop2, row(pop2))
+      d <- sapply(pop1, function(m) sapply(pop2, function(n) differ(m,n)))
+      out[i] <- sum(d)/length(d)
+      nms[i] <- paste0("d", combs[1, i], combs[2, i])
+    }
+    names(out) <- nms
+    return(out)
   }
-  names(out) <- nms
-  return(out)
 }
-
 #calc_pi_pops <- function(x, y) {
 #
 #  differ <- function(x, y) {
