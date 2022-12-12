@@ -222,6 +222,99 @@ calc_var_pi <- function(x, nsites = NULL) {
 }
 
 
+#' Function to calculate the sampling variance of pi (Nei 1987, eq. 10.7)
+#'
+#' @param x An object of class DNAbin or a matrix where rows are sequences and columns are nucleotide positions (assumed to be already aligned)
+#' @param nsites Optional integer specifying the total number of nucleotide sites in the alignment if fastsimcoal2 does not output all sites
+#' @export
+
+calc_var_pi2 <- function(x, nsites = NULL) { # New Var_pi function
+  if(is.null(nsites)) {
+    nsites <- ncol(x)
+  } else {
+    nsites <- nsites
+  }
+  # Get the unique sequences and the number of unique sequences
+  haps <- table(apply(x, 1, paste, collapse = ''))
+  # The line above creates a named vector, where the names are the sequences themselves
+  # and the values are the number of times that sequence occurs
+  # for this example it looks like:
+  # AATCCG  AATCGG  ATTCCG
+  # 2       2       2
+  # This named vector can act like a dictionary where the name is the key and
+  # the values are the values
+
+  # Calculate the frequencies of each unique sequence
+  # The output of this is the same as above but instead of '2's as values
+  # it is the frequencies (in this case 1/3)
+  freqs <- haps/nrow(x)
+
+  calcs <- 0 # initialize a count for var1
+  var3 <- 0 # initialize a count for var3
+
+  # The following loops calculate var1 and var3 for these loops the equation specifies
+  # that i<j, so we only run this loop through the combinations where i<j
+  # in our example those permutations are (2,1) (3,1) (3,2)
+  for(i in 2:length(haps)) {
+    for(j in 1:(i-1)) {
+      #print(paste(i, j))
+      # calculates pi_ij in the equation
+      pij <- length(which(unlist(strsplit(names(haps)[i], '')) != unlist(strsplit(names(haps)[j], ''))))/nsites
+
+      #freq[i] = x_; freqs[j] = x_j; add the sum to the total sum
+      calcs <- calcs + (freqs[i]*freqs[j]*pij)
+
+      # For var3 pij needs to be squared, but is otherwise the same as var1
+      var3 <- var3 + (freqs[i]*freqs[j]*pij^2)
+    }
+  }
+
+  # var1 needs to be squared as in the equation
+  var1 <- calcs^2
+
+  # This next line creates a matrix listing all the permutations that need to be
+  # calculated for var2 (i.e. the list of i's, j's, and k's). This looks like:
+  # 1 1 1
+  # 1 1 2
+  # 1 1 3
+  # ...
+  # 3 3 2
+  # 3 3 3
+
+  perms <- gtools::permutations(length(haps), 3, repeats.allowed = TRUE)
+  var2 = 0 # initialize the count for var2
+
+  # I loop through the matrix of permutations and use them as indices
+  # for the i's, j's, k's
+  for(i in 1:nrow(perms)) {
+    # Calculate the number of differences between x_i and x_j
+    countij <- length(which(unlist(strsplit(names(haps)[perms[i,1]], '')) != unlist(strsplit(names(haps)[perms[i,2]], ''))))
+    # Calculate the number of differences between x_i and x_k
+    countik <- length(which(unlist(strsplit(names(haps)[perms[i,1]], '')) != unlist(strsplit(names(haps)[perms[i,3]], ''))))
+    # Divide these counts by the length of the sequences
+    countij <- countij/nsites
+    countik <- countik/nsites
+
+    # freqs[perms[i,1]] = x_i; freqs[perms[i,2]] = x_j; freqs[perms[i,3]] = x_k
+    var2 <- var2 + freqs[perms[i,1]]*freqs[perms[i,2]]*freqs[perms[i,3]]*countij*countik
+  }
+  # Multiply by n-2 per the equation
+  var2 <- var2 * (nrow(x) - 2)
+
+  # Remove the names that R gave the variables
+  names(var1) <- NULL
+  names(var2) <- NULL
+  names(var3) <- NULL
+  print(paste("var1 =", var1))
+  print(paste("var2 =", var2))
+  print(paste("var3 =", var3))
+
+  # Put the equation all together
+  var_pi <- (4/(nrow(x)*(nrow(x)-1)))*((6-4*nrow(x))*var1+var2+var3)
+  return(var_pi)
+}
+
+
 #' Function to calculate the average number of nucleotide differences (dxy) between two separate populations (wakeley)
 #'
 #' @param l List with objects of class DNAbin or matrices where rows are sequences and columns are nucleotide positions from two different populations
@@ -357,9 +450,9 @@ sumstats <- function(x, nsites = NULL) {
   } else {
     pi <- fscSS::calc_pi(x) # Calculate the Average number of nucleotide differences (π)
     if(is.null(nsites)) {
-      var_pi <- fscSS::calc_var_pi(x)
+      var_pi <- fscSS::calc_var_pi2(x)
     } else {
-      var_pi <- fscSS::calc_var_pi(x, nsites = nsites)
+      var_pi <- fscSS::calc_var_pi2(x, nsites = nsites)
     }
   }
   theta <- fscSS::theta_watt(x)

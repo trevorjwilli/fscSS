@@ -17,7 +17,8 @@ Imports:
      ape,
      pegas,
      stats,
-     utils
+     utils,
+     gtools
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.1.1
 

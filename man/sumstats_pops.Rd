@@ -11,7 +11,7 @@ sumstats_pops(x, nsites = NULL)
 rows are sequences and columns are nucleotide positions. Each object in list is a separate
 population.}
 
-\item{nsites}{Optional integer indicating the total number of nucleotide sites in the}
+\item{nsites}{Optional integer indicating the total number of nucleotide sites in the analyzed locus}
 }
 \description{
 Function to calculate sumstats on samples with multiple populations
