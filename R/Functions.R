@@ -305,9 +305,9 @@ calc_var_pi2 <- function(x, nsites = NULL) { # New Var_pi function
   names(var1) <- NULL
   names(var2) <- NULL
   names(var3) <- NULL
-  print(paste("var1 =", var1))
-  print(paste("var2 =", var2))
-  print(paste("var3 =", var3))
+  #print(paste("var1 =", var1))
+  #print(paste("var2 =", var2))
+  #print(paste("var3 =", var3))
 
   # Put the equation all together
   var_pi <- (4/(nrow(x)*(nrow(x)-1)))*((6-4*nrow(x))*var1+var2+var3)
